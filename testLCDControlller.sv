@@ -1,4 +1,4 @@
-module	LCD_TEST (	
+module	testLCDControlller (	
 					input clk,rst,
 					output [7:0] LCD_DATA,
 					output LCD_RW,LCD_EN,LCD_RS,LCD_ON);

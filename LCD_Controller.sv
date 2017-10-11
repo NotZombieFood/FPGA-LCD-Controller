@@ -1,20 +1,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Module name:		LCD_Controller
 // Target Device: 	Altera DE2i-150
-// Author(s):			Gerardo Cruz Delgado
-//							Miguel Angel Bucio
-//							Abigail Parrales Mejia
+// Author(s):		Gerardo Cruz Delgado
+//					Miguel Angel Bucio
+//					Abigail Parrales Mejia
 // -----------------------------------------------------------------------------
 // Module description:
-//							Module for controlling the built in LCD Display 	
-//							from the FPGA, can be used with the display CFAH1602B
-//							Docs can be found at: https://goo.gl/vaBiph
+//					Module for controlling the built in LCD Display 	
+//					from the FPGA, can be used with the display CFAH1602B
+//					Docs can be found at: https://goo.gl/vaBiph
 // -----------------------------------------------------------------------------
-// Dependencies:	   LCD_FSM
-// Project:				MIPS with display functionality
+// Dependencies:	LCD_FSM
+// Project:			MIPS with display functionality
 ////////////////////////////////////////////////////////////////////////////////
 
-module LCD_Controller #(parameter	clk_wait	=	16;) 
+module LCD_Controller #(
+	parameter	clk_wait	=	16) 
 	(	
 		input reset,clk, iRS,
 		input [7:0] DATA,
@@ -37,18 +38,18 @@ logic [4:0] counter;
 
 //Reset
 always_ff @(posedge clk) begin
-	if(reset) begin
-		LCD_DONE	=	1'b0;
-		LCD_EN	=	1'b0;
-		counter	=	0;
-		state		= start;
-	end
+	state = (reset)? start : next_state;
 end
 
 //FSM
 always_ff @(posedge clk) begin
 	unique case(state)
-	start:	next_state	=	init;	//	Go to delay state
+	start:begin
+			LCD_DONE	=	1'b0;
+			LCD_EN	=	1'b0;
+			counter	=	0;
+			next_state	=	init;	//	Go to delay state
+			end
 	init:	begin
 			LCD_EN	=	1'b1;
 			next_state		=	delay;
@@ -62,7 +63,7 @@ always_ff @(posedge clk) begin
 	done:	begin
 			LCD_EN	=	1'b0;
 			LCD_DONE	=	1'b1; //set the flag for done
-			Cont	=	0;
+			counter	=	0;
 			next_state		=	start;
 			end
 	endcase
