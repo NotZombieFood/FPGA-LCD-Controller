@@ -16,7 +16,7 @@
 
 module LCD_Controller #(parameter	clk_wait	=	16;) 
 	(	
-		input reset,clk,
+		input reset,clk, iRS,
 		input [7:0] DATA,
 		output [7:0] LCD_DATA,
 		output logic LCD_EN, LCD_DONE,
@@ -29,7 +29,7 @@ assign LCD_ON = 1;
 //Assign outputs
 assign	LCD_DATA	=	DATA; 
 assign	LCD_RW		=	1'b0;
-assign	LCD_RS		=	reset;
+assign	LCD_RS		=	iRS;
 
 //	Internal connections
 enum {start, init, delay, done} state, next_state;
@@ -46,7 +46,7 @@ always_ff @(posedge clk) begin
 end
 
 //FSM
-always@(posedge clk) begin
+always_ff @(posedge clk) begin
 	unique case(state)
 	start:	next_state	=	init;	//	Go to delay state
 	init:	begin
