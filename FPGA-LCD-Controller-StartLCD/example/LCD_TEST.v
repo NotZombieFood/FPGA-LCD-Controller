@@ -1,27 +1,31 @@
-module	testLCDControlller (	
-					input clk,rst,
-					output [7:0] LCD_DATA,
-					output LCD_RW,LCD_EN,LCD_RS,LCD_ON);
+module	LCD_TEST (	//	Host Side
+					iCLK,iRST_N,
+					//	LCD Side
+					LCD_DATA,LCD_RW,LCD_EN,LCD_RS	);
+//	Host Side
+input			iCLK,iRST_N;
+//	LCD Side
+output	[7:0]	LCD_DATA;
+output			LCD_RW,LCD_EN,LCD_RS;
+//	Internal Wires/Registers
+reg	[5:0]	LUT_INDEX;
+reg	[8:0]	LUT_DATA;
+reg	[5:0]	mLCD_ST;
+reg	[17:0]	mDLY;
+reg			mLCD_Start;
+reg	[7:0]	mLCD_DATA;
+reg			mLCD_RS;
+wire		mLCD_Done;
 
-//	Internals
-logic	[5:0]	LUT_INDEX;
-logic	[8:0]	LUT_DATA;
-logic	[5:0]	mLCD_ST;
-logic	[17:0]	mDLY;
-logic			mLCD_Start;
-logic	[7:0]	mLCD_DATA;
-logic			mLCD_RS;
-logic		mLCD_Done;
-
-// Parameters
 parameter	LCD_INTIAL	=	0;
 parameter	LCD_LINE1	=	5;
 parameter	LCD_CH_LINE	=	LCD_LINE1+16;
 parameter	LCD_LINE2	=	LCD_LINE1+16+1;
 parameter	LUT_SIZE	=	LCD_LINE1+32+1;
 
-always_ff @(posedge clk) begin
-	if(~rst)
+always@(posedge iCLK or negedge iRST_N)
+begin
+	if(!iRST_N)
 	begin
 		LUT_INDEX	<=	0;
 		mLCD_ST		<=	0;
@@ -38,11 +42,13 @@ always_ff @(posedge clk) begin
 			0:	begin
 					mLCD_DATA	<=	LUT_DATA[7:0];
 					mLCD_RS		<=	LUT_DATA[8];
+					mLCD_Start	<=	1;
 					mLCD_ST		<=	1;
 				end
 			1:	begin
 					if(mLCD_Done)
 					begin
+						mLCD_Start	<=	0;
 						mLCD_ST		<=	2;					
 					end
 				end
@@ -64,7 +70,8 @@ always_ff @(posedge clk) begin
 	end
 end
 
-always_comb begin
+always
+begin
 	case(LUT_INDEX)
 	//	Initial
 	LCD_INTIAL+0:	LUT_DATA	<=	9'h038;
@@ -112,16 +119,17 @@ always_comb begin
 	endcase
 end
 
-LCD_Controller 		u0	(
-							.DATA(mLCD_DATA),
+LCD_Controller 		u0	(	//	Host Side
+							.iDATA(mLCD_DATA),
 							.iRS(mLCD_RS),
-							.LCD_DONE(mLCD_Done),
-							.clk(clk),
-							.reset(~rst),
+							.iStart(mLCD_Start),
+							.oDone(mLCD_Done),
+							.iCLK(iCLK),
+							.iRST_N(iRST_N),
+							//	LCD Interface
 							.LCD_DATA(LCD_DATA),
 							.LCD_RW(LCD_RW),
 							.LCD_EN(LCD_EN),
-							.LCD_RS(LCD_RS),
-							.LCD_ON(LCD_ON));
+							.LCD_RS(LCD_RS)	);
 
 endmodule
