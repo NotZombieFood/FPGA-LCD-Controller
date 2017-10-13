@@ -17,7 +17,7 @@
 module LCD_Controller #(
 	parameter	clk_wait	=	16) 
 	(	
-		input reset,clk, iRS,
+		input reset,clk, iRS, LCD_start,
 		input [7:0] DATA,
 		output [7:0] LCD_DATA,
 		output logic LCD_EN, LCD_DONE,
@@ -64,7 +64,9 @@ always_ff @(posedge clk) begin
 			LCD_EN	=	1'b0;
 			LCD_DONE	=	1'b1; //set the flag for done
 			counter	=	0;
+			if (LCD_start) begin
 			next_state		=	start;
+			end
 			end
 	endcase
 end
